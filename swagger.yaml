@@ -1,0 +1,377 @@
+swagger: '2.0'
+
+################################################################################
+#                              API Information                                 #
+################################################################################
+info:
+  version: "1.0.0"
+  title: TP Instance Service
+
+basePath: /
+produces:
+  - application/json
+consumes:
+  - application/json
+schemes:
+  - http
+
+################################################################################
+#                                  Security                                    #
+################################################################################
+securityDefinitions:
+  oauthClientCredentials:
+    type: oauth2
+    flow: application
+    tokenUrl: https://oauth.com/connect/token?client_id=<CLIENT_ID>&client_secret=<CLIENT_SECRET>&grant_type=client_credentials
+    scopes:
+      instance_management: to create or delete TP instances
+security:
+  - oauthClientCredentials:
+    - instance_management
+
+################################################################################
+#                                   Parameters                                 #
+################################################################################
+parameters:
+  hostNameParam:
+    name: hostName
+    in: path
+    description: Desired host name
+    required: true
+    type: string
+    x-example: "plan.tpondemand.com"
+  hostNamesParam:
+    name: hostNames
+    in: query
+    type: array
+    items:
+      type: string
+    collectionFormat: csv
+    required: true
+    x-example: "plan.tpondemand.com,test.tpondemand.com"
+
+################################################################################
+#                                    Paths                                     #
+################################################################################
+paths:
+  /instances:
+    x-swagger-router-controller: instances
+
+    post:
+      summary: Creates new TP instance
+      description: Creates new TP instance
+      operationId: Create
+      tags:
+      - Instances
+      parameters:
+        - name: args
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateModel'
+      responses:
+        201:
+          $ref: '#/responses/Success'
+        400:
+          $ref: '#/responses/BadRequest'
+        401:
+          $ref: '#/responses/Unauthorized'
+        403:
+          $ref: '#/responses/Forbidden'
+        503:
+          $ref: '#/responses/Unavailable'
+        500:
+          $ref: '#/responses/GeneralError'
+
+    put:
+      summary: Moves TP instances to given location
+      description: Moves TP instances to given location
+      operationId: BatchMoveToLocation
+      tags:
+      - Instances
+      parameters:
+      - $ref: '#/parameters/hostNamesParam'
+      - name: args
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/MoveModel'
+      responses:
+        204:
+          $ref: '#/responses/Success'
+        400:
+          $ref: '#/responses/BadRequest'
+        401:
+          $ref: '#/responses/Unauthorized'
+        403:
+          $ref: '#/responses/Forbidden'
+        503:
+          $ref: '#/responses/Unavailable'
+        500:
+          $ref: '#/responses/GeneralError'
+
+    delete:
+      summary: Deletes TP instances
+      description: Deletes TP instances
+      operationId: BatchDelete
+      tags:
+      - Instances
+      parameters:
+      - $ref: '#/parameters/hostNamesParam'
+      responses:
+        204:
+          $ref: '#/responses/Success'
+        401:
+          $ref: '#/responses/Unauthorized'
+        403:
+          $ref: '#/responses/Forbidden'
+        503:
+          $ref: '#/responses/Unavailable'
+        500:
+          $ref: '#/responses/GeneralError'
+
+  /instances/{hostName}:
+    x-swagger-router-controller: instances
+    parameters:
+      - $ref: '#/parameters/hostNameParam'
+
+    put:
+      summary: Moves TP instance to given location
+      description: Moves TP instance to given location
+      operationId: MoveToLocation
+      tags:
+      - Instances
+      parameters:
+        - name: args
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/MoveModel'
+      responses:
+        204:
+          $ref: '#/responses/Success'
+        400:
+          $ref: '#/responses/BadRequest'
+        401:
+          $ref: '#/responses/Unauthorized'
+        403:
+          $ref: '#/responses/Forbidden'
+        404:
+          $ref: '#/responses/NotFound'
+        503:
+          $ref: '#/responses/Unavailable'
+        500:
+          $ref: '#/responses/GeneralError'
+
+    head:
+      summary: Checks if TP instance exists
+      description: Checks if TP instance exists
+      operationId: Exists
+      tags:
+      - Instances
+      responses:
+        200:
+          description: Successful response
+        401:
+          $ref: '#/responses/Unauthorized'
+        403:
+          $ref: '#/responses/Forbidden'
+        404:
+          $ref: '#/responses/NotFound'
+        503:
+          $ref: '#/responses/Unavailable'
+        500:
+          $ref: '#/responses/GeneralError'
+
+    delete:
+      summary: Deletes TP instance
+      description: Deletes TP instance
+      operationId: Delete
+      tags:
+      - Instances
+      responses:
+        204:
+          description: Successful response
+        401:
+          $ref: '#/responses/Unauthorized'
+        403:
+          $ref: '#/responses/Forbidden'
+        404:
+          $ref: '#/responses/NotFound'
+        503:
+          $ref: '#/responses/Unavailable'
+        500:
+          $ref: '#/responses/GeneralError'
+
+    patch: # think about fire and forget implementation
+      summary: Changes TP instance host name
+      description: Changes TP instance host name
+      operationId: ChangeHostName
+      tags:
+      - Instances
+      parameters:
+        - name: args
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/ChangeHostNameModel'
+      responses:
+        204:
+          $ref: '#/responses/Success'
+        401:
+          $ref: '#/responses/Unauthorized'
+        403:
+          $ref: '#/responses/Forbidden'
+        404:
+          $ref: '#/responses/NotFound'
+        503:
+          $ref: '#/responses/Unavailable'
+        500:
+          $ref: '#/responses/GeneralError'
+
+  /locations:
+    x-swagger-router-controller: locations
+    get:
+      summary: Gets available datacenter locations
+      description: Gets available datacenter locations
+      operationId: GetLocations
+      tags:
+      - Locations
+      responses:
+        200:
+          description: Successful response
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/LocationModel'
+        401:
+          $ref: '#/responses/Unauthorized'
+        403:
+          $ref: '#/responses/Forbidden'
+        500:
+          $ref: '#/responses/GeneralError'
+
+################################################################################
+#                                   Tags                                       #
+################################################################################
+tags:
+  - name: Instances
+    description: Access to To instances
+  - name: Locations
+    description: List of locations
+
+
+################################################################################
+#                                   Responses                                  #
+################################################################################
+responses:
+  BadRequest:
+    description: Validation failed
+    schema:
+      $ref: '#/definitions/ErrorModel'
+  Success:
+    description: Successful response
+  NotFound:
+    description: Not found
+  Unavailable:
+    description: Service unavailable
+  Unauthorized:
+    description: Unauthorized
+  Forbidden:
+    description: Forbidden
+  GeneralError:
+    description: General error
+    schema:
+      $ref: '#/definitions/ErrorModel'
+
+################################################################################
+#                                  Definitions                                 #
+################################################################################
+definitions:
+  CreateModel:
+    type: object
+    required:
+    - hostName
+    - enableSnapshots
+    - paymentStatus
+    properties:
+      hostName:
+        description: Desired host name
+        type: string
+      paymentStatus:
+        type: string
+        description: Payment status (free/paid)
+        enum:
+        - Free
+        - Paid
+      location:
+        description: Desired datacenter location
+        type: string
+      enableSnapshots:
+        type: boolean
+        default: false
+      sampleData:
+        type: string
+        enum:
+        - None
+        - Full
+        - Light
+        - Plan
+      user:
+        $ref: '#/definitions/UserModel'
+  MoveModel:
+    type: object
+    required:
+    - paymentStatus
+    - location
+    - force
+    properties:
+      paymentStatus:
+        type: string
+        description: Payment status (free/paid)
+        enum:
+        - Free
+        - Paid
+      location:
+        description: Desired datacenter location
+        type: string
+      force:
+        type: boolean
+        default: false
+  ChangeHostNameModel:
+    type: object
+    required:
+    - hostName
+    properties:
+      hostName:
+        type: string
+        description: Desired host name
+  UserModel:
+    type: object
+    required:
+    - firstName
+    - lastName
+    - email
+    properties:
+      firstName:
+        type: string
+        default: 'Administrator'
+      lastName:
+        type: string
+        default: 'Administrator'
+      email:
+        type: string
+        format: email
+        default: 'admin@nonexistingemail.com'
+  LocationModel:
+    type: object
+    required:
+    - name
+    properties:
+      name:
+        type: string
+  ErrorModel:
+    type: object
+    properties:
+      message:
+        type: string
